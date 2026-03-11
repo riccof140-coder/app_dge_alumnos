@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SGE - Registro de Calificaciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tab.css') }}?v=40">
+    <style>
+        .table-data { width: 100%; border-collapse: collapse; background: white; }
+        .table-data th, .table-data td { border: 1px solid #bdc3c7; padding: 0; }
+        .table-data th { background: #f1f2f6; font-size: 0.8rem; padding: 5px; color: #2f3542; }
+        .table-data input { width: 100%; border: none; padding: 8px; outline: none; font-size: 0.9rem; }
+        .table-data input:focus { background: #e8f4fd; box-shadow: inset 0 0 0 2px #217346; }
+        .row-index { background: #dfe4ea; text-align: center; width: 40px; font-size: 0.75rem; }
+        .header-tecnico { background: #2f3542; color: white; padding: 10px 15px; font-family: monospace; }
+    </style>
+</head>
+<body style="background: #2c3e50 !important;">
+
+<div class="container-fluid py-4">
+    <div class="header-tecnico d-flex justify-content-between align-items-center shadow">
+        <span>DATA_SOURCE: NOTAS_DB // SUBJECT: {{ alumno.materia | upper }} // STUDENT: {{ alumno.nombre | upper }}</span>
+        <a href="/alumno/{{ alumno.id }}" class="btn btn-sm btn-outline-light text-uppercase" style="font-size: 0.7rem;">Cerrar Editor</a>
+    </div>
+
+    <div class="bg-white shadow-lg">
+        <table class="table-data">
+            <thead>
+                <tr>
+                    <th class="row-index">REF</th>
+                    <th>ÍTEM_EVALUACIÓN</th>
+                    <th style="width: 120px;">CALIFICACIÓN</th>
+                    <th>OBSERVACIONES_TÉCNICAS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for n in notas %}
+                <tr>
+                    <td class="row-index text-muted">{{ loop.index }}</td>
+                    <td class="px-3 small">{{ n.item }}</td>
+                    <td class="text-center fw-bold">{{ n.valor }}</td>
+                    <td class="px-3 text-muted small">{{ n.observaciones }}</td>
+                </tr>
+                {% endfor %}
+
+                <form method="POST">
+                    <tr style="background: #f1f9f1;">
+                        <td class="row-index text-success fw-bold">+</td>
+                        <td><input type="text" name="item" placeholder="Nuevo ítem..." required autofocus></td>
+                        <td><input type="number" name="valor" step="0.1" placeholder="0.0"></td>
+                        <td><input type="text" name="obs" placeholder="Presione ENTER para insertar"></td>
+                    </tr>
+                    <input type="submit" style="display: none;">
+                </form>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
