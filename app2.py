@@ -2,8 +2,14 @@ from flask import Flask, render_template, request, redirect, session, send_file
 import sqlite3
 from reportlab.pdfgen import canvas
 import io
+import os
 
-app = Flask(__name__)
+
+# Configuración explícita para que Render no se pierda
+app = Flask(__name__, 
+            static_folder='static', 
+            template_folder='templates')
+
 app.secret_key = "clave_secreta_123"
 
 # ---------------------------
