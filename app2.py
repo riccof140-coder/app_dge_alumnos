@@ -177,23 +177,36 @@ def alumno_ficha(id):
 # ---------------------------
 # PESTAÑA: DATOS
 # ---------------------------
-@app.route("/alumno/<int:id>/datos", methods=["GET", "POST"])
-def ficha_datos(id):
+# --- ELIMINAR UNA NOTA ESPECÍFICA ---
+@app.route('/eliminar_nota/<int:nota_id>/<int:alumno_id>')
+def eliminar_nota(nota_id, alumno_id):
     conn = get_db()
-    alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
+    conn.execute("DELETE FROM notas WHERE id = ?", (nota_id,))
+    conn.commit()
+    conn.close()
+    return redirect(f'/alumno/{alumno_id}/notas')
 
-    if request.method == "POST":
-        nombre = request.form["nombre"]
-        materia = request.form["materia"]
-        escuela = request.form["escuela"]
-
-        conn.execute("""
-            UPDATE alumnos SET nombre=?, materia=?, escuela=? WHERE id=?
-        """, (nombre, materia, escuela, id))
+# --- CARGA TÉCNICA ACTUALIZADA ---
+@app.route('/alumno/<int:id>/notas', methods=['GET', 'POST'])
+def notas_alumno(id):
+    conn = get_db()
+    if request.method == 'POST':
+        # Capturamos los campos individuales del "Efecto Excel"
+        actividad = request.form.get('actividad')
+        fecha = request.form.get('fecha')
+        valor = request.form.get('valor')
+        obs = request.form.get('obs')
+        
+        conn.execute("INSERT INTO notas (alumno_id, actividad, fecha, valor, observaciones) VALUES (?, ?, ?, ?, ?)",
+                     (id, actividad, fecha, valor, obs))
         conn.commit()
-        return redirect(f"/alumno/{id}")
+        return redirect(f'/alumno/{id}/notas')
 
-    return render_template("ficha_datos.html", alumno=alumno)
+    alumno = conn.execute("SELECT * FROM alumnos WHERE id = ?", (id,)).fetchone()
+    # Traemos las notas ordenadas por fecha para que se vea como un historial real
+    notas = conn.execute("SELECT * FROM notas WHERE alumno_id = ? ORDER BY fecha DESC", (id,)).fetchall()
+    conn.close()
+    return render_template('notas.html', alumno=alumno, notas=notas)
 
 # ---------------------------
 # PESTAÑA: NOTAS
