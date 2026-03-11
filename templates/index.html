@@ -1,32 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='tab.css') }}?v=2">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Alumnos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='tab.css') }}?v=12">
 </head>
-<body class="container mt-4">
+<body class="bg-light">
 
-<h2>Gestión de Alumnos</h2>
+    <div class="container py-5">
+        <div class="card shadow-lg border-0" style="border-radius: 15px;">
+            <div class="card-header bg-primary text-white p-4 d-flex justify-content-between align-items-center" style="border-radius: 15px 15px 0 0;">
+                <h2 class="mb-0"><i class="bi bi-people-fill me-2"></i>Gestión de Alumnos</h2>
+                <div>
+                    <a href="/agregar" class="btn btn-light shadow-sm fw-bold text-primary">
+                        <i class="bi bi-plus-circle-fill me-1"></i> Agregar Alumno
+                    </a>
+                </div>
+            </div>
 
-<a href="/agregar" class="btn btn-success mb-3">Agregar Alumno</a>
-<a href="/logout" class="btn btn-danger mb-3">Salir</a>
-
-<table class="table table-bordered">
-    <tr>
-        <th>Alumno</th>
-        <th>Materia</th>
-        <th>Escuela</th>
-        <th>Ficha</th>
-    </tr>
-
-    {% for a in alumnos %}
-    <tr>
-        <td>{{ a.nombre }}</td>
-        <td>{{ a.materia }}</td>
-        <td>{{ a.escuela }}</td>
-        <td><a class="btn btn-info" href="/alumno/{{ a.id }}">Abrir</a></td>
-    </tr>
-    {% endfor %}
-</table>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th class="ps-4">Alumno</th>
+                                <th>Materia</th>
+                                <th>Escuela</th>
+                                <th class="text-center">Ficha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in alumnos %}
+                            <tr class="align-middle">
+                                <td class="ps-4 fw-bold text-secondary">{{ a.nombre }}</td>
+                                <td><span class="badge bg-info text-dark">{{ a.materia }}</span></td>
+                                <td>{{ a.escuela }}</td>
+                                <td class="text-center">
+                                    <a class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" href="/alumno/{{ a.id }}">
+                                        <i class="bi bi-eye-fill"></i> Abrir
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-white text-end py-3" style="border-radius: 0 0 15px 15px;">
+                <a href="/logout" class="btn btn-outline-danger btn-sm border-0">
+                    <i class="bi bi-box-arrow-right"></i> Salir del Sistema
+                </a>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
