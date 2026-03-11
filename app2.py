@@ -10,7 +10,7 @@ app = Flask(__name__,
             static_folder='static', 
             template_folder='templates')
 
-app.secret_key = "clave_secreta_123"
+app.secret_key = "123456789"
 
 # ---------------------------
 # Conexión a la base de datos
