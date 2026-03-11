@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+</head>
+<body class="container mt-5">
+
+<h2>Ingreso Docente</h2>
+
+<form method="POST">
+    <input class="form-control" name="usuario" placeholder="Usuario" required>
+    <input class="form-control mt-2" name="password" type="password" placeholder="Contraseña" required>
+    <button class="btn btn-primary mt-3">Ingresar</button>
+
+    {% if error %}
+    <p class="text-danger mt-2">{{ error }}</p>
+    {% endif %}
+</form>
+
+</body>
+</html>

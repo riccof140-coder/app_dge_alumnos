@@ -1,0 +1,18 @@
+{% include 'alumno_ficha.html' %}
+
+<div class="card p-4 mt-3">
+    <h4>Editar datos del alumno</h4>
+
+    <form method="POST">
+        <label>Nombre</label>
+        <input class="form-control" name="nombre" value="{{ alumno.nombre }}" required>
+
+        <label class="mt-2">Materia</label>
+        <input class="form-control" name="materia" value="{{ alumno.materia }}" required>
+
+        <label class="mt-2">Escuela</label>
+        <input class="form-control" name="escuela" value="{{ alumno.escuela }}" required>
+
+        <button class="btn btn-primary mt-3">Guardar cambios</button>
+    </form>
+</div>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/tabs.css">
+    <link rel="stylesheet" href="/static/progress.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+
+<body class="container mt-4">
+
+<!-- TARJETA AZUL -->
+<div class="card text-white bg-primary mb-3">
+    <div class="card-body">
+        <h3 class="card-title">{{ alumno.nombre }}</h3>
+        <p class="card-text">
+            <strong>Materia:</strong> {{ alumno.materia }}<br>
+            <strong>Escuela:</strong> {{ alumno.escuela }}
+        </p>
+
+        <a href="/alumno/{{ alumno.id }}/datos" class="btn btn-light btn-sm">Editar</a>
+        <a href="/pdf/{{ alumno.id }}" class="btn btn-warning btn-sm">PDF</a>
+        <a href="/inicio" class="btn btn-dark btn-sm">Volver</a>
+    </div>
+</div>
+
+<!-- PESTAÑAS CON ÍCONOS -->
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link" href="/alumno/{{ alumno.id }}/datos">
+            <i class="bi bi-person"></i> Datos
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="/alumno/{{ alumno.id }}/notas">
+            <i class="bi bi-pencil-square"></i> Notas
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="/alumno/{{ alumno.id }}/carga">
+            <i class="bi bi-stopwatch"></i> Carga
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="/alumno/{{ alumno.id }}/progreso">
+            <i class="bi bi-bar-chart-line"></i> Progreso
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="/alumno/{{ alumno.id }}/rubricas">
+            <i class="bi bi-grid-3x3-gap"></i> Rúbricas
+        </a>
+    </li>
+</ul>
+
+<!-- CONTENIDO DE LA PESTAÑA SELECCIONADA -->
+<div class="card p-4">
+    <p>Seleccioná una pestaña para ver la información del alumno.</p>
+</div>
+
+</body>
+</html>

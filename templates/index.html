@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+
+<h2>Gestión de Alumnos</h2>
+
+<a href="/agregar" class="btn btn-success mb-3">Agregar Alumno</a>
+<a href="/logout" class="btn btn-danger mb-3">Salir</a>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Alumno</th>
+        <th>Materia</th>
+        <th>Escuela</th>
+        <th>Ficha</th>
+    </tr>
+
+    {% for a in alumnos %}
+    <tr>
+        <td>{{ a.nombre }}</td>
+        <td>{{ a.materia }}</td>
+        <td>{{ a.escuela }}</td>
+        <td><a class="btn btn-info" href="/alumno/{{ a.id }}">Abrir</a></td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

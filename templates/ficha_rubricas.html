@@ -1,0 +1,18 @@
+{% include 'alumno_ficha.html' %}
+
+<div class="card p-4 mt-3">
+    <h4>Rúbricas disponibles</h4>
+
+    {% if rubricas %}
+        <ul class="list-group">
+            {% for r in rubricas %}
+            <li class="list-group-item">
+                <strong>{{ r.nombre }}</strong><br>
+                <small>{{ r.descripcion }}</small>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay rúbricas cargadas.</p>
+    {% endif %}
+</div>

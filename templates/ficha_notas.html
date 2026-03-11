@@ -1,0 +1,12 @@
+{% include 'alumno_ficha.html' %}
+
+<div class="card p-4 mt-3">
+    <h4>Notas del alumno</h4>
+
+    <form method="POST">
+        <label>Notas (separadas por coma)</label>
+        <input class="form-control" name="notas" value="{{ notas | join(', ') }}">
+
+        <button class="btn btn-warning mt-3">Guardar</button>
+    </form>
+</div>

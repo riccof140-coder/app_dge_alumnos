@@ -1,0 +1,21 @@
+{% include 'alumno_ficha.html' %}
+
+<div class="card p-4 mt-3">
+    <h4>Progreso del alumno</h4>
+
+    <form method="POST">
+        <label>Asistencia (%)</label>
+        <input class="form-control" type="number" name="asistencia"
+               value="{{ progreso.asistencia if progreso else '' }}" required>
+
+        <label class="mt-2">Trabajos entregados (%)</label>
+        <input class="form-control" type="number" name="trabajos"
+               value="{{ progreso.trabajos if progreso else '' }}" required>
+
+        <label class="mt-2">Participación (1 a 5)</label>
+        <input class="form-control" type="number" name="participacion"
+               value="{{ progreso.participacion if progreso else '' }}" required>
+
+        <button class="btn btn-primary mt-3">Guardar</button>
+    </form>
+</div>

@@ -1,0 +1,30 @@
+{% include 'alumno_ficha.html' %}
+
+<div class="card p-4 mt-3">
+    <h4>Carga horaria</h4>
+    <form method="POST">
+        <label>Horas totales</label>
+        <input class="form-control" type="number" name="horas_totales"
+               value="{{ carga.horas_totales if carga else '' }}" required>
+
+        <label class="mt-2">Horas dictadas</label>
+        <input class="form-control" type="number" name="horas_dictadas"
+               value="{{ carga.horas_dictadas if carga else '' }}" required>
+
+        {% if carga %}
+            {% if carga.horas_totales > 0 %}
+                {% set avance = (carga.horas_dictadas / carga.horas_totales) * 100 %}
+            {% else %}
+                {% set avance = 0 %}
+            {% endif %}
+            <div class="progress mt-3">
+                <div class="progress-bar" role="progressbar"
+                     style="width: {{ avance }}%;">
+                    {{ avance|round(1) }}%
+                </div>
+            </div>
+        {% endif %}
+
+        <button class="btn btn-primary mt-3">Guardar</button>
+    </form>
+</div>
