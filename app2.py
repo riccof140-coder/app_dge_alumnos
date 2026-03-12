@@ -10,6 +10,24 @@ app = Flask(__name__,
             static_folder='static', 
             template_folder='templates')
 
+def crear_usuario_inicial():
+    conn = sqlite3.connect('database.db') # Asegúrate de que el nombre coincida con el tuyo
+    cursor = conn.cursor()
+    # Verificamos si ya existe el usuario para no duplicarlo
+    cursor.execute("SELECT * FROM usuarios WHERE usuario = ?", ('admin',))
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", 
+                       ('admin', '12345'))
+        conn.commit()
+        print(">>> USUARIO INICIAL CREADO: admin / 12345")
+    conn.close()
+
+# Llama a la función aquí:
+crear_usuario_inicial()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 app.secret_key = "123456789"
 
 # ---------------------------
