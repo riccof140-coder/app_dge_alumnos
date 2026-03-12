@@ -64,7 +64,7 @@ def crear_usuario_inicial():
     # Verificamos si existe en la tabla 'docentes'
     cursor.execute("SELECT * FROM docentes WHERE usuario = ?", ('admin',))
     if not cursor.fetchone():
-        cursor.execute("INSERT INTO docentes (usuario, password) VALUES (?, ?)", 
+        cursor.execute("INSERT OR IGNORE INTO docentes (usuario, password) VALUES (?, ?)",
                        ('admin', '12345'))
         conn.commit()
         print(">>> CONFIGURACIÓN: Usuario 'admin' / '12345' creado con éxito.")
