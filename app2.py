@@ -14,7 +14,7 @@ app = Flask(__name__,
 if __name__ == '__main__':
     app.run(debug=True)
 
-app.secret_key = ""
+
 
 # ---------------------------
 # Conexión a la base de datos
