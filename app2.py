@@ -59,7 +59,7 @@ def init_db():
 # Función de Auto-Registro (Solución al Login)
 # ---------------------------
 def crear_usuario_inicial():
-    conn = get_db()
+    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
     # Verificamos si existe en la tabla 'docentes'
     cursor.execute("SELECT * FROM docentes WHERE usuario = ?", ('admin',))
