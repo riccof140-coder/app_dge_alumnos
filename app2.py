@@ -117,7 +117,9 @@ def inicio():
 
 @app.route("/agregar", methods=["GET", "POST"])
 def agregar():
-    if "docente" not in session: return redirect("/")
+    
+    if "docente" not in session: 
+        return redirect("/")
     if request.method == "POST":
         nombre = request.form["nombre"]
         materia = request.form["materia"]
@@ -132,7 +134,8 @@ def agregar():
 
 @app.route("/eliminar/<int:id>")
 def eliminar_alumno(id):
-    if "docente" not in session: return redirect("/")
+    if "docente" not in session: 
+        return redirect("/")
     conn = get_db()
     conn.execute("DELETE FROM alumnos WHERE id = ?", (id,))
     conn.execute("DELETE FROM notas WHERE alumno_id = ?", (id,)) # Borra sus notas también
@@ -146,7 +149,8 @@ def eliminar_alumno(id):
 
 @app.route("/alumno/<int:id>/notas", methods=["GET", "POST"])
 def ficha_notas(id):
-    if "docente" not in session: return redirect("/")
+    if "docente" not in session: 
+        return redirect("/")
     conn = get_db()
     
     if request.method == "POST":
@@ -169,7 +173,8 @@ def ficha_notas(id):
 
 @app.route("/eliminar_nota/<int:nota_id>/<int:alumno_id>")
 def eliminar_nota(nota_id, alumno_id):
-    if "docente" not in session: return redirect("/")
+    if "docente" not in session: 
+        return redirect("/")
     conn = get_db()
     conn.execute("DELETE FROM notas WHERE id = ?", (nota_id,))
     conn.commit()
@@ -182,7 +187,8 @@ def eliminar_nota(nota_id, alumno_id):
 
 @app.route("/alumno/<int:id>")
 def alumno_ficha(id):
-    if "docente" not in session: return redirect("/")
+    if "docente" not in session: 
+        return redirect("/")
     conn = get_db()
     alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
     conn.close()
