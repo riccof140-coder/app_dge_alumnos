@@ -10,20 +10,6 @@ app = Flask(__name__,
             static_folder='static', 
             template_folder='templates')
 
-def crear_usuario_inicial():
-    conn = sqlite3.connect('database.db') # Asegúrate de que el nombre coincida con el tuyo
-    cursor = conn.cursor()
-    # Verificamos si ya existe el usuario para no duplicarlo
-    cursor.execute("SELECT * FROM usuarios WHERE usuario = ?", ('admin',))
-    if not cursor.fetchone():
-        cursor.execute("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", 
-                       ('admin', '12345'))
-        conn.commit()
-        print(">>> USUARIO INICIAL CREADO: admin / 12345")
-    conn.close()
-
-# Llama a la función aquí:
-crear_usuario_inicial()
 
 if __name__ == '__main__':
     app.run(debug=True)
@@ -339,6 +325,24 @@ def pdf(id):
 
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="boletin.pdf")
+
+# 1. Cambia temporalmente el nombre de la base de datos en TODO tu app2.py
+# donde diga 'database.db' (o el nombre que tengas), ponle 'escuela_nueva.db'
+
+# 2. Asegúrate de que la función de crear_usuario use ese mismo nombre:
+def crear_usuario_inicial():
+    conn = sqlite3.connect('escuela_nueva.db') # EL MISMO NOMBRE
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS usuarios 
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                      usuario TEXT, password TEXT)''')
+    cursor.execute("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", 
+                   ('admin', '12345'))
+    conn.commit()
+    conn.close()
+    print(">>> BASE DE DATOS NUEVA Y USUARIO CREADO")
+
+crear_usuario_inicial()
 
 # ---------------------------
 # EJECUTAR SERVIDOR
