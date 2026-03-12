@@ -4,17 +4,11 @@ from reportlab.pdfgen import canvas
 import io
 import os
 
-
-# Configuración explícita para que Render no se pierda
 app = Flask(__name__, 
             static_folder='static', 
             template_folder='templates')
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
+app.secret_key = "DGE_Proyect_2026_Seguro" # Clave para evitar alertas de Chrome
 
 # ---------------------------
 # Conexión a la base de datos
@@ -25,11 +19,11 @@ def get_db():
     return conn
 
 # ---------------------------
-# Crear tablas si no existen
+# Crear tablas si no existen (Estructura Técnica)
 # ---------------------------
 def init_db():
     conn = get_db()
-
+    # Tabla de Docentes (para el Login)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS docentes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,7 +31,7 @@ def init_db():
             password TEXT
         )
     """)
-
+    # Tabla de Alumnos
     conn.execute("""
         CREATE TABLE IF NOT EXISTS alumnos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,92 +40,61 @@ def init_db():
             escuela TEXT
         )
     """)
-
+    # NUEVA TABLA DE NOTAS (Con Actividad y Fecha)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS notas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             alumno_id INTEGER,
-            nota REAL,
+            actividad TEXT,
+            fecha TEXT,
+            valor REAL,
+            observaciones TEXT,
             FOREIGN KEY(alumno_id) REFERENCES alumnos(id)
         )
     """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS carga_horaria (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            alumno_id INTEGER,
-            horas_totales INTEGER,
-            horas_dictadas INTEGER,
-            FOREIGN KEY(alumno_id) REFERENCES alumnos(id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS progreso (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            alumno_id INTEGER,
-            asistencia REAL,
-            trabajos REAL,
-            participacion REAL,
-            FOREIGN KEY(alumno_id) REFERENCES alumnos(id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS rubricas (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nombre TEXT,
-            descripcion TEXT
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS criterios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            rubrica_id INTEGER,
-            criterio TEXT,
-            peso REAL,
-            FOREIGN KEY(rubrica_id) REFERENCES rubricas(id)
-        )
-    """)
-
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS evaluaciones (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            alumno_id INTEGER,
-            criterio_id INTEGER,
-            nivel INTEGER,
-            FOREIGN KEY(alumno_id) REFERENCES alumnos(id),
-            FOREIGN KEY(criterio_id) REFERENCES criterios(id)
-        )
-    """)
-
     conn.commit()
     conn.close()
 
+# ---------------------------
+# Función de Auto-Registro (Solución al Login)
+# ---------------------------
+def crear_usuario_inicial():
+    conn = get_db()
+    cursor = conn.cursor()
+    # Verificamos si existe en la tabla 'docentes'
+    cursor.execute("SELECT * FROM docentes WHERE usuario = ?", ('admin',))
+    if not cursor.fetchone():
+        cursor.execute("INSERT INTO docentes (usuario, password) VALUES (?, ?)", 
+                       ('admin', '12345'))
+        conn.commit()
+        print(">>> CONFIGURACIÓN: Usuario 'admin' / '12345' creado con éxito.")
+    conn.close()
+
+# Inicializamos la DB y el usuario al arrancar
 init_db()
+crear_usuario_inicial()
 
 # ---------------------------
-# LOGIN
+# RUTAS DE LOGIN Y SISTEMA
 # ---------------------------
+
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         usuario = request.form["usuario"]
         password = request.form["password"]
-
         conn = get_db()
         docente = conn.execute(
             "SELECT * FROM docentes WHERE usuario=? AND password=?",
             (usuario, password)
         ).fetchone()
+        conn.close()
 
         if docente:
             session["docente"] = usuario
             return redirect("/inicio")
         else:
             return render_template("login.html", error="Credenciales incorrectas")
-
     return render_template("login.html")
 
 @app.route("/logout")
@@ -139,214 +102,116 @@ def logout():
     session.clear()
     return redirect("/")
 
-# ---------------------------
-# PANEL PRINCIPAL
-# ---------------------------
 @app.route("/inicio")
 def inicio():
     if "docente" not in session:
         return redirect("/")
-
     conn = get_db()
     alumnos = conn.execute("SELECT * FROM alumnos").fetchall()
+    conn.close()
     return render_template("index.html", alumnos=alumnos)
 
 # ---------------------------
-# AGREGAR ALUMNO
+# GESTIÓN DE ALUMNOS (Carga y Borrado)
 # ---------------------------
+
 @app.route("/agregar", methods=["GET", "POST"])
 def agregar():
+    if "docente" not in session: return redirect("/")
     if request.method == "POST":
         nombre = request.form["nombre"]
         materia = request.form["materia"]
         escuela = request.form["escuela"]
-
         conn = get_db()
         conn.execute("INSERT INTO alumnos (nombre, materia, escuela) VALUES (?, ?, ?)",
                      (nombre, materia, escuela))
         conn.commit()
+        conn.close()
         return redirect("/inicio")
-
     return render_template("alumno_form.html")
 
-# ---------------------------
-# FICHA DEL ALUMNO (tarjeta + pestañas)
-# ---------------------------
-@app.route("/alumno/<int:id>")
-def alumno_ficha(id):
+@app.route("/eliminar/<int:id>")
+def eliminar_alumno(id):
+    if "docente" not in session: return redirect("/")
     conn = get_db()
-    alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
-    return render_template("alumno_ficha.html", alumno=alumno)
+    conn.execute("DELETE FROM alumnos WHERE id = ?", (id,))
+    conn.execute("DELETE FROM notas WHERE alumno_id = ?", (id,)) # Borra sus notas también
+    conn.commit()
+    conn.close()
+    return redirect("/inicio")
 
 # ---------------------------
-# PESTAÑA: DATOS
+# REGISTRO DE NOTAS (Efecto Excel)
 # ---------------------------
-@app.route("/alumno/<int:id>/datos", methods=["GET", "POST"])
-def ficha_datos(id):
-    conn = get_db()
-    alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
 
-    if request.method == "POST":
-        nombre = request.form["nombre"]
-        materia = request.form["materia"]
-        escuela = request.form["escuela"]
-
-        conn.execute("""
-            UPDATE alumnos SET nombre=?, materia=?, escuela=? WHERE id=?
-        """, (nombre, materia, escuela, id))
-        conn.commit()
-        return redirect(f"/alumno/{id}")
-
-    return render_template("ficha_datos.html", alumno=alumno)
-
-# ---------------------------
-# PESTAÑA: NOTAS
-# ---------------------------
 @app.route("/alumno/<int:id>/notas", methods=["GET", "POST"])
 def ficha_notas(id):
+    if "docente" not in session: return redirect("/")
     conn = get_db()
-
+    
     if request.method == "POST":
-        notas_str = request.form["notas"]
-        notas = [float(n.strip()) for n in notas_str.split(",") if n.strip()]
-
-        conn.execute("DELETE FROM notas WHERE alumno_id=?", (id,))
-        for n in notas:
-            conn.execute("INSERT INTO notas (alumno_id, nota) VALUES (?, ?)", (id, n))
+        actividad = request.form.get("actividad")
+        fecha = request.form.get("fecha")
+        valor = request.form.get("valor")
+        obs = request.form.get("obs")
+        
+        conn.execute("""
+            INSERT INTO notas (alumno_id, actividad, fecha, valor, observaciones) 
+            VALUES (?, ?, ?, ?, ?)
+        """, (id, actividad, fecha, valor, obs))
         conn.commit()
-
         return redirect(f"/alumno/{id}/notas")
 
     alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
-    notas = conn.execute("SELECT nota FROM notas WHERE alumno_id=?", (id,)).fetchall()
-    notas_lista = [n["nota"] for n in notas]
+    notas = conn.execute("SELECT * FROM notas WHERE alumno_id=? ORDER BY fecha DESC", (id,)).fetchall()
+    conn.close()
+    return render_template("ficha_notas.html", alumno=alumno, notas=notas)
 
-    return render_template("ficha_notas.html", alumno=alumno, notas=notas_lista)
-
-# ---------------------------
-# PESTAÑA: CARGA HORARIA
-# ---------------------------
-@app.route("/alumno/<int:id>/carga", methods=["GET", "POST"])
-def ficha_carga(id):
+@app.route("/eliminar_nota/<int:nota_id>/<int:alumno_id>")
+def eliminar_nota(nota_id, alumno_id):
+    if "docente" not in session: return redirect("/")
     conn = get_db()
-
-    carga = conn.execute(
-        "SELECT * FROM carga_horaria WHERE alumno_id=?", (id,)
-    ).fetchone()
-
-    if request.method == "POST":
-        horas_totales = int(request.form["horas_totales"])
-        horas_dictadas = int(request.form["horas_dictadas"])
-
-        if carga:
-            conn.execute("""
-                UPDATE carga_horaria SET horas_totales=?, horas_dictadas=? WHERE alumno_id=?
-            """, (horas_totales, horas_dictadas, id))
-        else:
-            conn.execute("""
-                INSERT INTO carga_horaria (alumno_id, horas_totales, horas_dictadas)
-                VALUES (?, ?, ?)
-            """, (id, horas_totales, horas_dictadas))
-
-        conn.commit()
-        return redirect(f"/alumno/{id}/carga")
-
-    alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
-    return render_template("ficha_carga.html", alumno=alumno, carga=carga)
+    conn.execute("DELETE FROM notas WHERE id = ?", (nota_id,))
+    conn.commit()
+    conn.close()
+    return redirect(f"/alumno/{alumno_id}/notas")
 
 # ---------------------------
-# PESTAÑA: PROGRESO
+# FICHA Y PDF
 # ---------------------------
-@app.route("/alumno/<int:id>/progreso", methods=["GET", "POST"])
-def ficha_progreso(id):
-    conn = get_db()
 
-    progreso = conn.execute(
-        "SELECT * FROM progreso WHERE alumno_id=?", (id,)
-    ).fetchone()
-
-    if request.method == "POST":
-        asistencia = float(request.form["asistencia"])
-        trabajos = float(request.form["trabajos"])
-        participacion = float(request.form["participacion"])
-
-        if progreso:
-            conn.execute("""
-                UPDATE progreso SET asistencia=?, trabajos=?, participacion=? WHERE alumno_id=?
-            """, (asistencia, trabajos, participacion, id))
-        else:
-            conn.execute("""
-                INSERT INTO progreso (alumno_id, asistencia, trabajos, participacion)
-                VALUES (?, ?, ?, ?)
-            """, (id, asistencia, trabajos, participacion))
-
-        conn.commit()
-        return redirect(f"/alumno/{id}/progreso")
-
-    alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
-    return render_template("ficha_progreso.html", alumno=alumno, progreso=progreso)
-
-# ---------------------------
-# PESTAÑA: RÚBRICAS
-# ---------------------------
-@app.route("/alumno/<int:id>/rubricas")
-def ficha_rubricas(id):
+@app.route("/alumno/<int:id>")
+def alumno_ficha(id):
+    if "docente" not in session: return redirect("/")
     conn = get_db()
     alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
-    rubricas = conn.execute("SELECT * FROM rubricas").fetchall()
-    return render_template("ficha_rubricas.html", alumno=alumno, rubricas=rubricas)
+    conn.close()
+    return render_template("alumno_ficha.html", alumno=alumno)
 
-# ---------------------------
-# PDF DEL ALUMNO
-# ---------------------------
 @app.route("/pdf/<int:id>")
 def pdf(id):
     conn = get_db()
     alumno = conn.execute("SELECT * FROM alumnos WHERE id=?", (id,)).fetchone()
-    notas = conn.execute("SELECT nota FROM notas WHERE alumno_id=?", (id,)).fetchall()
-    notas_lista = [n["nota"] for n in notas]
+    notas = conn.execute("SELECT valor FROM notas WHERE alumno_id=?", (id,)).fetchall()
+    notas_lista = [n["valor"] for n in notas]
     promedio = sum(notas_lista) / len(notas_lista) if notas_lista else 0
+    conn.close()
 
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer)
-
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 800, "Boletín de Calificaciones")
-
     p.setFont("Helvetica", 12)
     p.drawString(100, 760, f"Alumno: {alumno['nombre']}")
     p.drawString(100, 740, f"Materia: {alumno['materia']}")
     p.drawString(100, 720, f"Escuela: {alumno['escuela']}")
-    p.drawString(100, 700, f"Notas: {notas_lista}")
-    p.drawString(100, 680, f"Promedio: {promedio:.2f}")
-
+    p.drawString(100, 680, f"Promedio Final: {promedio:.2f}")
     p.showPage()
     p.save()
-
     buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name="boletin.pdf")
-
-# 1. Cambia temporalmente el nombre de la base de datos en TODO tu app2.py
-# donde diga 'database.db' (o el nombre que tengas), ponle 'escuela_nueva.db'
-
-# 2. Asegúrate de que la función de crear_usuario use ese mismo nombre:
-def crear_usuario_inicial():
-    conn = sqlite3.connect('escuela_nueva.db') # EL MISMO NOMBRE
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS usuarios 
-                     (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                      usuario TEXT, password TEXT)''')
-    cursor.execute("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", 
-                   ('admin', '12345'))
-    conn.commit()
-    conn.close()
-    print(">>> BASE DE DATOS NUEVA Y USUARIO CREADO")
-
-crear_usuario_inicial()
-
-# ---------------------------
-# EJECUTAR SERVIDOR
-# ---------------------------
+    return send_file(buffer, as_attachment=True, download_name=f"boletin_{alumno['nombre']}.pdf")
 
 if __name__ == "__main__":
-    app.run(debug=True)   # solo para desarrollo
+    # Configuración para Render y Local
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
