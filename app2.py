@@ -28,7 +28,7 @@ crear_usuario_inicial()
 if __name__ == '__main__':
     app.run(debug=True)
 
-app.secret_key = "123456789"
+app.secret_key = ""
 
 # ---------------------------
 # Conexión a la base de datos
